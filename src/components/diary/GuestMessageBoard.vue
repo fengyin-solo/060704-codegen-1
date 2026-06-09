@@ -7,9 +7,12 @@ import { globalTimeline } from '@/engine/Timeline'
 interface Props {
   wallOwnerId: string
   isOwner: boolean
+  isWallPublic?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  isWallPublic: false
+})
 
 const userStore = useUserStore()
 const messageStore = useMessageStore()
@@ -45,16 +48,27 @@ function getTimeAgo(timestamp: number): string {
   return `${Math.floor(diff / 86400)}天前`
 }
 
+const canSubmit = computed(() => {
+  if (props.isOwner) return true
+  return props.isWallPublic
+})
+
 async function submitMessage() {
   const content = newMessage.value.trim()
   if (!content) return
+  if (!canSubmit.value) {
+    console.warn('Cannot submit message to private wall')
+    return
+  }
   
   const name = displayName.value.trim() || '匿名访客'
   
   isSubmitting.value = true
   try {
-    messageStore.addMessage(props.wallOwnerId, content, name)
-    newMessage.value = ''
+    const result = messageStore.addMessage(props.wallOwnerId, content, name)
+    if (result) {
+      newMessage.value = ''
+    }
   } finally {
     isSubmitting.value = false
   }
@@ -103,7 +117,14 @@ watch(() => props.wallOwnerId, () => {
     </div>
     
     <div class="border-2 border-gray-700 rounded-lg p-4 bg-gray-900/50">
-      <div class="mb-3">
+      <div v-if="!canSubmit && !isOwner" class="text-center py-4">
+        <div class="text-3xl mb-2">🔒</div>
+        <p class="text-gray-500 font-vt323">
+          该主页为私密状态，暂不开放留言
+        </p>
+      </div>
+      
+      <div v-else class="mb-3">
         <input
           v-if="!userStore.currentUser"
           v-model="guestName"
@@ -121,6 +142,8 @@ watch(() => props.wallOwnerId, () => {
           maxlength="200"
           rows="3"
           class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-200 font-vt323 placeholder-gray-500 focus:outline-none focus:border-diary-fresh resize-none"
+          :disabled="!canSubmit"
+          :class="{ 'opacity-50 cursor-not-allowed': !canSubmit }"
           @keydown.enter.ctrl="submitMessage"
         />
         <div class="flex justify-between items-center mt-2">
@@ -129,8 +152,8 @@ watch(() => props.wallOwnerId, () => {
           </span>
           <button
             class="btn-pixel text-diary-rotting border-diary-rotting text-sm"
-            :disabled="!newMessage.trim() || isSubmitting"
-            :class="{ 'opacity-50 cursor-not-allowed': !newMessage.trim() || isSubmitting }"
+            :disabled="!newMessage.trim() || isSubmitting || !canSubmit"
+            :class="{ 'opacity-50 cursor-not-allowed': !newMessage.trim() || isSubmitting || !canSubmit }"
             @click="submitMessage"
           >
             {{ isSubmitting ? '发送中...' : '💌 留下脚印' }}
@@ -140,7 +163,14 @@ watch(() => props.wallOwnerId, () => {
     </div>
     
     <div class="space-y-3 max-h-96 overflow-y-auto">
-      <div v-if="messages.length === 0" class="text-center py-8">
+      <div v-if="!canSubmit && !isOwner" class="text-center py-8">
+        <div class="text-4xl mb-2">🔒</div>
+        <p class="text-gray-500 font-vt323">
+          该主页为私密状态，留言功能已关闭
+        </p>
+      </div>
+      
+      <div v-else-if="messages.length === 0" class="text-center py-8">
         <div class="text-4xl mb-2">🏜️</div>
         <p class="text-gray-500 font-vt323">
           还没有留言，成为第一个留下脚印的人吧~

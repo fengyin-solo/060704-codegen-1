@@ -28,6 +28,15 @@ export const useMessageStore = defineStore('message', () => {
     const userStore = getUserStore()
     const wallOwnerId = userStore.visitingUserId || userStore.currentUserId
     if (!wallOwnerId) return []
+    
+    const wallOwner = userStore.getUserById(wallOwnerId)
+    const currentUserId = userStore.currentUserId
+    const isOwner = currentUserId === wallOwnerId
+    
+    if (!isOwner && wallOwner && !wallOwner.isPublic) {
+      return []
+    }
+    
     return messages.value
       .filter(m => m.wallOwnerId === wallOwnerId && !m.isDeleted)
       .sort((a, b) => b.createdAt - a.createdAt)
@@ -37,6 +46,7 @@ export const useMessageStore = defineStore('message', () => {
     const userStore = getUserStore()
     const userId = userStore.currentUserId
     if (!userId) return 0
+    
     return messages.value.filter(
       m => m.wallOwnerId === userId && !m.isRead && !m.isDeleted
     ).length
@@ -50,8 +60,18 @@ export const useMessageStore = defineStore('message', () => {
     return notif?.lastReadAt || 0
   })
 
-  function addMessage(wallOwnerId: string, content: string, guestName: string): GuestMessage {
+  function addMessage(wallOwnerId: string, content: string, guestName: string): GuestMessage | null {
     const userStore = getUserStore()
+    const wallOwner = userStore.getUserById(wallOwnerId)
+    
+    if (!wallOwner) return null
+    
+    const isOwner = userStore.currentUserId === wallOwnerId
+    if (!isOwner && !wallOwner.isPublic) {
+      console.warn('Cannot add message to private wall')
+      return null
+    }
+    
     const now = globalTimeline.getTime()
     
     const message: GuestMessage = {
@@ -117,12 +137,30 @@ export const useMessageStore = defineStore('message', () => {
   }
 
   function getMessagesByWall(wallOwnerId: string): GuestMessage[] {
+    const userStore = getUserStore()
+    const wallOwner = userStore.getUserById(wallOwnerId)
+    const currentUserId = userStore.currentUserId
+    
+    const isOwner = currentUserId === wallOwnerId
+    if (!isOwner && wallOwner && !wallOwner.isPublic) {
+      return []
+    }
+    
     return messages.value
       .filter(m => m.wallOwnerId === wallOwnerId && !m.isDeleted)
       .sort((a, b) => b.createdAt - a.createdAt)
   }
 
   function getUnreadMessages(wallOwnerId: string): GuestMessage[] {
+    const userStore = getUserStore()
+    const wallOwner = userStore.getUserById(wallOwnerId)
+    const currentUserId = userStore.currentUserId
+    
+    const isOwner = currentUserId === wallOwnerId
+    if (!isOwner && wallOwner && !wallOwner.isPublic) {
+      return []
+    }
+    
     return messages.value.filter(
       m => m.wallOwnerId === wallOwnerId && !m.isRead && !m.isDeleted
     )

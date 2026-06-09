@@ -35,6 +35,12 @@ const wallOwnerId = computed(() => {
   return route.params.userId as string || userStore.currentUserId || ''
 })
 
+const showMessageBoard = computed(() => {
+  if (!wallOwnerId.value) return false
+  if (!isVisiting.value) return true
+  return wallOwner.value?.isPublic ?? false
+})
+
 const diaries = computed(() => {
   if (route.params.userId) {
     const now = globalTimeline.getTime()
@@ -154,15 +160,23 @@ onMounted(() => {
       />
     </div>
     
-    <div class="ascii-divider mt-12">
+    <div v-if="showMessageBoard" class="ascii-divider mt-12">
       ================================================================
     </div>
     
     <GuestMessageBoard
-      v-if="wallOwnerId"
+      v-if="showMessageBoard && wallOwnerId"
       :wallOwnerId="wallOwnerId"
       :isOwner="!isVisiting"
+      :isWallPublic="wallOwner?.isPublic ?? false"
     />
+    
+    <div v-if="isVisiting && !showMessageBoard" class="mt-12 text-center py-8 border-2 border-gray-700 rounded-lg bg-gray-900/50">
+      <div class="text-4xl mb-4">🔒</div>
+      <p class="text-gray-500 font-vt323 text-lg">
+        该用户的主页为私密状态，暂不开放访客留言
+      </p>
+    </div>
     
     <CreateDiaryModal
       v-if="showCreateModal"
