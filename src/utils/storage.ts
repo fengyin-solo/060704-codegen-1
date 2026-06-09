@@ -1,11 +1,13 @@
-import type { Diary, User, InventoryItem, ArchivedDiary } from '@/types'
+import type { Diary, User, InventoryItem, ArchivedDiary, GuestMessage, UserMessageNotification } from '@/types'
 
 const STORAGE_KEYS = {
   CURRENT_USER: 'glitch_diary_current_user',
   USERS: 'glitch_diary_users',
   DIARIES: 'glitch_diary_diaries',
   INVENTORY: 'glitch_diary_inventory_',
-  ARCHIVED_DIARIES: 'glitch_diary_archived_diaries'
+  ARCHIVED_DIARIES: 'glitch_diary_archived_diaries',
+  GUEST_MESSAGES: 'glitch_diary_guest_messages',
+  MESSAGE_NOTIFICATIONS: 'glitch_diary_message_notifications'
 }
 
 export const storage = {
@@ -55,5 +57,23 @@ export const storage = {
 
   saveArchivedDiaries(archivedDiaries: ArchivedDiary[]): void {
     localStorage.setItem(STORAGE_KEYS.ARCHIVED_DIARIES, JSON.stringify(archivedDiaries))
+  },
+
+  getGuestMessages(): GuestMessage[] {
+    const data = localStorage.getItem(STORAGE_KEYS.GUEST_MESSAGES)
+    return data ? JSON.parse(data) : []
+  },
+
+  saveGuestMessages(messages: GuestMessage[]): void {
+    localStorage.setItem(STORAGE_KEYS.GUEST_MESSAGES, JSON.stringify(messages))
+  },
+
+  getMessageNotifications(): UserMessageNotification[] {
+    const data = localStorage.getItem(STORAGE_KEYS.MESSAGE_NOTIFICATIONS)
+    return data ? JSON.parse(data) : []
+  },
+
+  saveMessageNotifications(notifications: UserMessageNotification[]): void {
+    localStorage.setItem(STORAGE_KEYS.MESSAGE_NOTIFICATIONS, JSON.stringify(notifications))
   }
 }

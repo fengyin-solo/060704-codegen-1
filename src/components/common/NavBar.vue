@@ -8,9 +8,13 @@ interface Props {
   isVisiting: boolean
   currentUser: User | null
   visitingUser: User | null
+  unreadMessageCount?: number
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  unreadMessageCount: 0
+})
+
 const emit = defineEmits<{
   logout: []
   'stop-visiting': []
@@ -21,16 +25,16 @@ const route = useRoute()
 
 const navItems = computed(() => {
   const items = [
-    { path: '/', label: '日记墙', icon: '📒' },
-    { path: '/gallery', label: '展陈馆', icon: '🏛️' }
+    { path: '/', label: '日记墙', icon: '📒', hasBadge: props.unreadMessageCount > 0, badgeCount: props.unreadMessageCount },
+    { path: '/gallery', label: '展陈馆', icon: '🏛️', hasBadge: false, badgeCount: 0 }
   ]
   
   if (props.isLoggedIn && !props.isVisiting) {
     items.push(
-      { path: '/inventory', label: '道具仓库', icon: '🎒' },
-      { path: '/archive', label: '旧档案馆', icon: '📜' },
-      { path: '/visit', label: '串门', icon: '🚪' },
-      { path: '/user', label: '用户中心', icon: '👤' }
+      { path: '/inventory', label: '道具仓库', icon: '🎒', hasBadge: false, badgeCount: 0 },
+      { path: '/archive', label: '旧档案馆', icon: '📜', hasBadge: false, badgeCount: 0 },
+      { path: '/visit', label: '串门', icon: '🚪', hasBadge: false, badgeCount: 0 },
+      { path: '/user', label: '用户中心', icon: '👤', hasBadge: false, badgeCount: 0 }
     )
   }
   
@@ -83,7 +87,7 @@ function navigate(path: string) {
             <button
               v-for="item in navItems"
               :key="item.path"
-              class="px-3 py-1 font-vt323 text-lg transition-all"
+              class="px-3 py-1 font-vt323 text-lg transition-all relative"
               :class="[
                 isActive(item.path) 
                   ? 'text-diary-fresh glow-text' 
@@ -93,6 +97,12 @@ function navigate(path: string) {
             >
               <span class="mr-1">{{ item.icon }}</span>
               {{ item.label }}
+              <span
+                v-if="item.hasBadge && item.badgeCount > 0"
+                class="absolute -top-1 -right-1 min-w-5 h-5 flex items-center justify-center px-1 bg-diary-rotting text-white text-xs font-vt323 rounded-full animate-pulse"
+              >
+                {{ item.badgeCount > 99 ? '99+' : item.badgeCount }}
+              </span>
             </button>
           </div>
           

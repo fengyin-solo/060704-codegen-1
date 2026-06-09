@@ -3,10 +3,13 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterView, useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useInventoryStore } from '@/stores/inventory'
+import { useMessageStore } from '@/stores/message'
 import { pluginLoader } from '@/engine/PluginLoader'
 import NavBar from '@/components/common/NavBar.vue'
 
 const userStore = useUserStore()
+const inventoryStore = useInventoryStore()
+const messageStore = useMessageStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -16,6 +19,7 @@ const bootProgress = ref(0)
 const isLoggedIn = computed(() => !!userStore.currentUserId)
 const isVisiting = computed(() => !!userStore.visitingUserId)
 const showNav = computed(() => !route.path.startsWith('/login'))
+const unreadMessageCount = computed(() => messageStore.unreadCount)
 
 onMounted(async () => {
   await pluginLoader.loadAll()
@@ -40,8 +44,8 @@ function handleLogin(userName: string) {
   const user = userStore.registerUser(userName)
   userStore.login(user.id)
   
-  const inventoryStore = useInventoryStore()
   inventoryStore.init(user.id)
+  messageStore.init()
   
   router.push('/')
 }
@@ -93,6 +97,7 @@ function handleStopVisiting() {
         :isVisiting="isVisiting"
         :currentUser="userStore.currentUser"
         :visitingUser="userStore.visitingUser"
+        :unreadMessageCount="unreadMessageCount"
         @logout="handleLogout"
         @stop-visiting="handleStopVisiting"
       />

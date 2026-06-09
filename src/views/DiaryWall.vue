@@ -9,6 +9,7 @@ import { globalTimeline } from '@/engine/Timeline'
 import TimelineControl from '@/components/timeline/TimelineControl.vue'
 import DiaryCard from '@/components/diary/DiaryCard.vue'
 import CreateDiaryModal from '@/components/diary/CreateDiaryModal.vue'
+import GuestMessageBoard from '@/components/diary/GuestMessageBoard.vue'
 import type { DiaryState } from '@/types'
 import { STATE_NAMES, STATE_COLORS } from '@/types'
 
@@ -28,6 +29,10 @@ const wallOwner = computed(() => {
     return userStore.getUserById(route.params.userId as string)
   }
   return userStore.currentUser
+})
+
+const wallOwnerId = computed(() => {
+  return route.params.userId as string || userStore.currentUserId || ''
 })
 
 const diaries = computed(() => {
@@ -148,6 +153,16 @@ onMounted(() => {
         :isOwner="!isVisiting"
       />
     </div>
+    
+    <div class="ascii-divider mt-12">
+      ================================================================
+    </div>
+    
+    <GuestMessageBoard
+      v-if="wallOwnerId"
+      :wallOwnerId="wallOwnerId"
+      :isOwner="!isVisiting"
+    />
     
     <CreateDiaryModal
       v-if="showCreateModal"

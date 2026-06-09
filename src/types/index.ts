@@ -236,3 +236,19 @@ export const TIME_PERIOD_NAMES: Record<TimePeriod, string> = {
   [TimePeriod.YEAR]: '年度珍藏',
   [TimePeriod.ALL]: '全部时光'
 }
+
+export interface GuestMessage {
+  id: string
+  wallOwnerId: string
+  guestId: string | null
+  guestName: string
+  content: string
+  createdAt: number
+  isRead: boolean
+  isDeleted: boolean
+}
+
+export interface UserMessageNotification {
+  userId: string
+  lastReadAt: number
+}

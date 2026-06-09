@@ -7,6 +7,7 @@ import { pluginLoader } from './engine/PluginLoader'
 import { useUserStore } from './stores/user'
 import { useDiaryStore } from './stores/diary'
 import { useInventoryStore } from './stores/inventory'
+import { useMessageStore } from './stores/message'
 
 async function initApp() {
   await pluginLoader.loadAll()
@@ -22,6 +23,9 @@ async function initApp() {
   
   const diaryStore = useDiaryStore()
   diaryStore.init()
+  
+  const messageStore = useMessageStore()
+  messageStore.init()
   
   if (userStore.currentUserId) {
     const inventoryStore = useInventoryStore()
